@@ -2,9 +2,10 @@ use soroban_sdk::{token, Address, Env};
 
 use crate::DataKey;
 
-/// @title Refund Single Token Transfer Helper
-/// @notice Centralizes transfer direction for contributor refunds.
-/// @dev Keeps contract-side call sites explicit and typo-resistant for scripts.
+/// Centralizes transfer direction for contributor refunds.
+///
+/// @notice Transfers `amount` tokens from `contract_address` to `contributor`.
+/// @dev    Keeping this in one place prevents parameter-order typos at call sites.
 pub fn refund_single_transfer(
     token_client: &token::Client,
     contract_address: &Address,

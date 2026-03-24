@@ -648,6 +648,33 @@ impl CrowdfundContract {
         Ok(())
     }
 
+    /// Refund a single contributor after campaign failure.
+    ///
+    /// @notice Transfers the full stored contribution from contract to contributor.
+    /// @dev The transfer direction is explicitly contract -> contributor to prevent
+    ///      script-level parameter typos and accidental reverse transfer attempts.
+    /// @param contributor Contributor address to refund.
+    /// @return Ok(()) when the refund is complete or nothing is owed.
+    /// Claim a refund for a single contributor (pull-based).
+    ///
+    /// Each contributor independently claims their own refund after the campaign
+    /// deadline has passed and the goal was not met.
+    ///
+    /// # Arguments
+    /// * `contributor` – The address claiming the refund. Must match the caller.
+    ///
+    /// # Errors
+    /// * [`ContractError::CampaignStillActive`] – Deadline has not yet passed.
+    /// * [`ContractError::GoalReached`]         – Goal was met; no refunds available.
+    /// * [`ContractError::NothingToRefund`]     – Caller has no contribution on record.
+    ///
+    /// # Security
+    /// * Requires `contributor.require_auth()` — only the contributor can claim.
+    /// * Zeroes the contribution record **before** transfer (checks-effects-interactions).
+    /// * Uses `checked_sub` to prevent underflow on `total_raised`.
+    pub fn refund_single(env: Env, contributor: Address) -> Result<(), ContractError> {
+        contributor.require_auth();
+
     /// Claim a refund for a single contributor (pull-based).
     ///
     /// # Errors
@@ -674,6 +701,7 @@ impl CrowdfundContract {
             .instance()
             .get(&DataKey::TotalRaised)
             .unwrap_or(0);
+
         if total >= goal {
             return Err(ContractError::GoalReached);
         }
@@ -688,6 +716,7 @@ impl CrowdfundContract {
             return Err(ContractError::NothingToRefund);
         }
 
+        // ── Checks-Effects-Interactions ──────────────────────────────────────
         let token_address: Address = env.storage().instance().get(&DataKey::Token).unwrap();
         let token_client = token::Client::new(&env, &token_address);
         refund_single_transfer(
@@ -706,6 +735,10 @@ impl CrowdfundContract {
         env.storage()
             .instance()
             .set(&DataKey::TotalRaised, &new_total);
+
+        let token_address: Address = env.storage().instance().get(&DataKey::Token).unwrap();
+        let token_client = token::Client::new(&env, &token_address);
+        token_client.transfer(&env.current_contract_address(), &contributor, &amount);
 
         env.events()
             .publish(("campaign", "refund_single"), (contributor, amount));
