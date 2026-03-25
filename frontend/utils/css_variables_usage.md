@@ -396,7 +396,7 @@ npm test -- --testPathPatterns="css_variables_usage" --coverage
 
 ### Test Coverage
 
-Current test coverage: **93.22%**
+Current test coverage: **95%+** with caching and typed cssVar tests.
 
 | Metric | Coverage |
 |--------|----------|
