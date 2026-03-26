@@ -319,19 +319,25 @@ describe("ReactSubmitButton click handling", () => {
 
   it("does NOT fire onClick in submitting state", () => {
     const onClick = jest.fn();
-    fireEvent.click(renderBtn({ state: "submitting", onClick }));
+    act(() => {
+      fireEvent.click(renderBtn({ state: "submitting", onClick }));
+    });
     expect(onClick).not.toHaveBeenCalled();
   });
 
   it("does NOT fire onClick in disabled state", () => {
     const onClick = jest.fn();
-    fireEvent.click(renderBtn({ state: "disabled", onClick }));
+    act(() => {
+      fireEvent.click(renderBtn({ state: "disabled", onClick }));
+    });
     expect(onClick).not.toHaveBeenCalled();
   });
 
   it("does NOT fire onClick when disabled prop is true", () => {
     const onClick = jest.fn();
-    fireEvent.click(renderBtn({ disabled: true, onClick }));
+    act(() => {
+      fireEvent.click(renderBtn({ disabled: true, onClick }));
+    });
     expect(onClick).not.toHaveBeenCalled();
   });
 
